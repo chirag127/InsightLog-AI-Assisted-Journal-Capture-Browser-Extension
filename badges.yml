@@ -1,0 +1,38 @@
+badges:
+  - name: Build Status
+    type: github-actions
+    owner: chirag127
+    repo: InsightLog-AI-Assisted-Journal-Capture-Browser-Extension
+    workflow_file: ci.yml
+    label: Build
+    style: flat-square
+  - name: Code Coverage
+    type: codecov
+    repo: chirag127/InsightLog-AI-Assisted-Journal-Capture-Browser-Extension
+    file: coverage/coverage.xml
+    style: flat-square
+  - name: Language
+    type: badge
+    label: Language
+    message: JavaScript
+    color: blue
+    style: flat-square
+  - name: License
+    type: license
+    path: LICENSE
+    style: flat-square
+  - name: GitHub Stars
+    type: github-stars
+    owner: chirag127
+    repo: InsightLog-AI-Assisted-Journal-Capture-Browser-Extension
+    style: flat-square
+  - name: NPM Version (Placeholder)
+    type: npm
+    package: insightlog-extension
+    style: flat-square
+  - name: Biome Status
+    type: badge
+    label: Format
+    message: Running
+    color: success
+    style: flat-square
