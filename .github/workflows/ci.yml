@@ -1,72 +1,50 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  lint:
+  build_test_lint:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16.x'
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
-      - name: Lint
-        run: npm run lint || echo "Linting failed but continuing"
+    timeout-minutes: 10
 
-  test-backend:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:5.0
-        ports:
-          - 27017:27017
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16.x'
-          cache: 'npm'
-      - name: Install dependencies
-        run: |
-          npm ci
-          cd backend && npm ci
-      - name: Create .env file
-        run: |
-          cd backend
-          echo "PORT=3000" > .env
-          echo "NODE_ENV=test" >> .env
-          echo "MONGODB_URI=mongodb://localhost:27017/auto-journal-test" >> .env
-          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
-          echo "ALLOWED_ORIGINS=*" >> .env
-          echo "JWT_SECRET=test-secret" >> .env
-      - name: Run backend tests
-        run: npm run test:backend
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  build-extension:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
         with:
-          node-version: '16.x'
+          node-version: '20'
           cache: 'npm'
-      - name: Install dependencies
+
+      - name: Install Dependencies
         run: npm ci
-      - name: Build extension
-        run: npm run package || echo "Packaging failed but continuing"
-      - name: Upload extension artifact
-        uses: actions/upload-artifact@v3
+
+      - name: Run Biome Lint and Format Checks
+        run: npx @biomejs/biome check .
+
+      - name: Run Vitest Unit Tests with Coverage
+        run: npm test -- --coverage
+
+      - name: Upload Code Coverage to Codecov
+        uses: codecov/codecov-action@v4
         with:
-          name: extension-package
-          path: dist/auto-journal-extension.zip
-          if-no-files-found: ignore
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: coverage/
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Build Browser Extension
+        run: npm run build
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: insightlog-extension-build
+          path: dist/
